@@ -173,6 +173,7 @@ Want to go back to Helium?
 
 Simply remove the microSD card and reboot the hotspot.
 
+
 ## Credits
 
 This project would not have been possible without the outstanding work of **sicXnull**, who successfully ported **Armbian** to the Bobcat 300 platform.
