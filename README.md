@@ -88,61 +88,55 @@ Supports the complete LoRaWAN EU868 data rate range, including:
 
 # Installation
 
-Bobcat300-TTN starts **after** your Bobcat 300 G285 has already been converted to Armbian.
+This project **does not install Armbian**.
 
-If you have not done that yet, start here:
+It starts **after** your Bobcat 300 G285 has already been converted to Armbian.
 
-## Step 1 — Install Armbian on the G285
+---
 
-Follow the complete installation guide from **sicXnull**.
+## Step 1 — Install Armbian
+
+Follow the complete Bobcat-Armbian installation guide:
 
 https://github.com/sicXnull/Bobcat-Armbian
 
-Follow **all** instructions in that repository until:
+For the **Bobcat 300 G285**, complete **ALL** of the following sections:
 
-- Armbian boots successfully from the microSD card
-- You can log into the hotspot using SSH (PuTTY)
+- ✅ G285 – SD Card Boot (No eMMC Flash Required)
+- ✅ First Boot
+- ✅ Helium Installation
 
-Do **not** continue until this works.
+Do **not** continue until all three sections have been completed successfully.
 
----
+At this point you should have:
 
-## Step 2 — Verify the LoRa concentrator
+- Armbian booting from the microSD card
+- SSH access (PuTTY)
+- A working Helium packet forwarder
+- A functioning SX1302 LoRa concentrator
 
-Still following the Bobcat-Armbian instructions, install and test the original Helium packet forwarder.
-
-```
-install_helium.sh
-```
-
-Verify that:
-
-- the SX1302 concentrator is detected
-- packets are being received
-- there are no SPI errors
-
-Only continue once the Helium packet forwarder is working correctly.
+The original firmware should still be safely stored on the internal eMMC.
 
 ---
 
-## Step 3 — Connect using SSH
+## Step 2 — Connect to the gateway
 
-Open **PuTTY** (or another SSH client) and connect to your Bobcat G285 running Armbian.
+Open **PuTTY** (or another SSH client) and connect to your Bobcat G285.
 
 Example:
 
-```
+```text
 Host: 192.168.1.xxx
 Port: 22
 ```
 
-Login with your Armbian username and password.
+Login using your Armbian username and password.
 
 ---
 
-## Step 4 — Install Bobcat300-TTN
+## Step 3 — Install Bobcat300-TTN
 
-Run:
+Download and run the installer:
 
 ```bash
 wget https://raw.githubusercontent.com/AdvdLaar/Bobcat300-TTN/main/install_ttn.sh
@@ -150,16 +144,34 @@ chmod +x install_ttn.sh
 ./install_ttn.sh
 ```
 
-The installer will:
+The installer will automatically:
 
-- stop the Helium packet forwarder
-- install Semtech Basic Station
-- configure the Gateway EUI
-- configure CUPS/LNS
-- enable automatic startup
-- reboot the gateway
+- Stop the Helium packet forwarder
+- Install Semtech Basic Station
+- Configure the Gateway EUI
+- Configure CUPS/LNS
+- Enable automatic startup
+- Reboot the gateway
 
-After reboot the gateway is ready to register in **The Things Network**.
+---
+
+## Step 4 — Register your gateway
+
+After the reboot your gateway is running **Semtech Basic Station**.
+
+Register the gateway in **The Things Network (TTN)** using your Gateway EUI.
+
+Once registered, the gateway should appear online within a few seconds.
+
+---
+
+## That's it!
+
+Your Bobcat 300 G285 has now been converted into a fully functional TTN gateway while the original Helium firmware remains safely stored on the internal eMMC.
+
+Want to go back to Helium?
+
+Simply remove the microSD card and reboot the hotspot.
 
 ## Credits
 
