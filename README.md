@@ -17,6 +17,16 @@ Convert a Bobcat 300 Helium hotspot into a The Things Network (TTN) gateway.
 | G290 | 🟡 Expected to work |
 | G295 | 🟡 Expected to work |
 
+## Credits
+
+This project is based on the excellent work of **sicXnull**, who ported Armbian to the Bobcat 300 series.
+
+- Armbian forum discussion:
+  :contentReference[oaicite:0]{index=0}
+
+- Build repository:
+  :contentReference[oaicite:1]{index=1}
+
 ## Disclaimer
 
 This project is not affiliated with Bobcat, Helium or The Things Network.
