@@ -80,11 +80,64 @@ Supports the complete LoRaWAN EU868 data rate range, including:
 
 ### Network
 
-- Ethernet
+- Ethernet or WiFi (use standard Linux init and contact the G285 by Putty with an SSH connection)
 - DHCP
 - NTP time synchronization
 - Automatic reconnect
 
+
+## Prerequisites
+
+Before installing Bobcat300-TTN you need a Bobcat 300 G285 running Armbian from a microSD card.
+
+### Step 1 — Install Armbian
+
+Follow the instructions in the Bobcat-Armbian project:
+
+https://github.com/sicXnull/Bobcat-Armbian
+
+or use the automated installer:
+
+```bash
+install_armbian.sh
+```
+
+(see the Bobcat-Armbian repository)
+
+---
+
+### Step 2 — Install Helium packet forwarder
+
+Run:
+
+```bash
+install_helium.sh
+```
+
+This installs the original Helium packet forwarder and verifies that the LoRa concentrator is functioning correctly.
+
+It is strongly recommended to verify that the hotspot is working before continuing.
+
+---
+
+### Step 3 — Convert to TTN
+
+Finally run:
+
+```bash
+install_ttn.sh
+```
+
+The installer will:
+
+- Stop the Helium packet forwarder
+- Install Semtech Basic Station
+- Configure your TTN Gateway EUI
+- Configure CUPS/LNS
+- Enable the TTN gateway service
+- Reboot the gateway
+
+Your Bobcat G285 is now ready for The Things Network.
 
 ## Credits
 
