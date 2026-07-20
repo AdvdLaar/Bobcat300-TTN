@@ -45,6 +45,48 @@ For **G290** and **G295** devices, please refer to the original **Bobcat-Armbian
 
 ---
 
+## Specifications
+
+### Hardware
+
+- Bobcat 300 G285
+- Semtech SX1302 LoRa concentrator
+- GPS supported (optional)
+- Ethernet backhaul
+- Runs entirely from microSD
+- Original eMMC remains untouched
+
+### Supported LoRaWAN Regions
+
+- 🇪🇺 EU868 (tested)
+- Other regions can be configured by editing the Basic Station configuration.
+
+### Supported Data Rates
+
+Supports the complete LoRaWAN EU868 data rate range, including:
+
+- SF7BW125
+- SF8BW125
+- SF9BW125
+- SF10BW125
+- SF11BW125
+- SF12BW125
+
+### Gateway Software
+
+- Armbian Linux
+- Semtech Basic Station
+- The Things Stack (TTN V3)
+- CUPS/LNS support
+
+### Network
+
+- Ethernet
+- DHCP
+- NTP time synchronization
+- Automatic reconnect
+
+
 ## Credits
 
 This project would not have been possible without the outstanding work of **sicXnull**, who successfully ported **Armbian** to the Bobcat 300 platform.
