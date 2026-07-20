@@ -1,12 +1,12 @@
 # Bobcat300-TTN
 
-Give your Bobcat 300 Helium hotspot a second life by converting it into a fully functional **The Things Network (TTN)** LoRaWAN gateway.
+Give your **Bobcat 300 G285** Helium hotspot a second life by converting it into a fully functional **The Things Network (TTN)** LoRaWAN gateway.
 
-Bobcat300-TTN installs **Armbian** on a microSD card, leaving the original Bobcat firmware stored on the internal eMMC completely untouched.
+Unlike other installation methods, **this project is specifically designed for the G285** and runs entirely from a **microSD card**.
 
-No permanent modifications are made to the hotspot.
+**Nothing is written to the internal eMMC.** Your original Helium firmware remains completely untouched.
 
-Want to switch back to the original Helium firmware? Simply remove the microSD card and reboot the device.
+Want to switch back to the original hotspot? Simply remove the microSD card and reboot.
 
 ---
 
@@ -14,18 +14,24 @@ Want to switch back to the original Helium firmware? Simply remove the microSD c
 
 Thousands of Bobcat 300 hotspots are no longer being used after the decline of Helium mining.
 
-This project gives these devices a second life by turning them into reliable TTN LoRaWAN gateways while preserving the original firmware.
+This project provides a **safe and reversible** way to convert a **Bobcat 300 G285** into a TTN gateway without modifying the original firmware.
+
+The G285 is unique because it is capable of booting directly from a microSD card. This allows Armbian and TTN software to run entirely from the SD card while the factory software remains safely stored on the internal eMMC.
+
+For **G290** and **G295** devices, please refer to the original **Bobcat-Armbian** project by **sicXnull**. Those models use a different installation procedure.
 
 ---
 
 ## Features
 
-- ✅ Non-destructive installation (runs entirely from microSD)
-- ✅ Keeps the original Helium firmware intact
-- ✅ Easy installation using `install_ttn.sh`
+- ✅ Designed specifically for the **Bobcat 300 G285**
+- ✅ Runs entirely from a microSD card
+- ✅ Original Helium firmware remains untouched
+- ✅ Nothing is written to the internal eMMC
+- ✅ One-command installation using `install_ttn.sh`
 - ✅ Installs Semtech Basic Station
 - ✅ Ready for The Things Network (TTN)
-- ✅ Easy rollback by removing the microSD card
+- ✅ Roll back at any time by simply removing the microSD card
 
 ---
 
@@ -33,52 +39,26 @@ This project gives these devices a second life by turning them into reliable TTN
 
 | Model | Status | Notes |
 |--------|--------|-------|
-| G285 | ✅ Tested | Fully working |
-| G290 | 🟡 Expected | Untested |
-| G295 | 🟡 Expected | Untested |
-
----
-
-## Installation
-
-Coming soon.
-
-The installation will be as simple as:
-
-```bash
-wget https://raw.githubusercontent.com/<yourname>/Bobcat300-TTN/main/install_ttn.sh
-chmod +x install_ttn.sh
-./install_ttn.sh
-```
+| G285 | ✅ Supported | Safe SD-card installation (no eMMC modifications) |
+| G290 | 🟡 Use Bobcat-Armbian | Different installation method |
+| G295 | 🟡 Use Bobcat-Armbian | Different installation method |
 
 ---
 
 ## Credits
 
-This project builds upon the excellent work of **sicXnull**, who ported Armbian to the Bobcat 300 platform.
+This project would not have been possible without the outstanding work of **sicXnull**, who successfully ported **Armbian** to the Bobcat 300 platform.
 
-### Bobcat-Armbian
+My project builds upon that foundation and adds an easy, safe and fully reversible installation of **The Things Network (TTN)** for the **Bobcat 300 G285**.
+
+### Original Bobcat-Armbian project
 
 https://github.com/sicXnull/Bobcat-Armbian
 
-### Issues and discussion
+### Armbian forum discussion
 
-https://github.com/sicXnull/Bobcat-Armbian/issues
+https://forum.armbian.com/topic/57321-armbian-for-bobcat-300-29x-helium-miner/ :contentReference[oaicite:0]{index=0}
 
-Many thanks to **sicXnull** for making Armbian available for the Bobcat 300 series.
-
----
-
-## Disclaimer
-
-This project is **not affiliated with Bobcat, Helium, Semtech or The Things Network**.
-
-Use this software at your own risk.
-
-Always create a backup before making changes to your hotspot.
+Many thanks to **sicXnull** for making Armbian available for the Bobcat platform and for sharing all of the hard work with the community.
 
 ---
-
-## License
-
-MIT License
