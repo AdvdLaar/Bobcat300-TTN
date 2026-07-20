@@ -96,15 +96,7 @@ Follow the instructions in the Bobcat-Armbian project:
 
 https://github.com/sicXnull/Bobcat-Armbian
 
-or use the automated installer:
 
-```bash
-install_armbian.sh
-```
-
-(see the Bobcat-Armbian repository)
-
----
 
 ### Step 2 — Install Helium packet forwarder
 
