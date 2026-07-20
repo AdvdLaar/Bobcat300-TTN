@@ -57,7 +57,7 @@ https://github.com/sicXnull/Bobcat-Armbian
 
 ### Armbian forum discussion
 
-https://forum.armbian.com/topic/57321-armbian-for-bobcat-300-29x-helium-miner/ :contentReference[oaicite:0]{index=0}
+https://forum.armbian.com/topic/57321-armbian-for-bobcat-300-29x-helium-miner/
 
 Many thanks to **sicXnull** for making Armbian available for the Bobcat platform and for sharing all of the hard work with the community.
 
