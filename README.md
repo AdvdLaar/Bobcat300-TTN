@@ -51,7 +51,6 @@ For **G290** and **G295** devices, please refer to the original **Bobcat-Armbian
 
 - Bobcat 300 G285
 - Semtech SX1302 LoRa concentrator
-- GPS supported (optional)
 - Ethernet backhaul
 - Runs entirely from microSD
 - Original eMMC remains untouched
