@@ -22,69 +22,107 @@ For **G290** and **G295** devices, please refer to the original **Bobcat-Armbian
 
 ---
 
-## Features
+# Current status
 
-- ✅ Designed specifically for the **Bobcat 300 G285**
-- ✅ Runs entirely from a microSD card
-- ✅ Original Helium firmware remains untouched
-- ✅ Nothing is written to the internal eMMC
-- ✅ One-command installation using `install_ttn.sh`
-- ✅ Installs Semtech Basic Station
-- ✅ Ready for The Things Network (TTN)
-- ✅ Roll back at any time by simply removing the microSD card
+The gateway currently uses the proven and widely supported:
 
----
+**Semtech UDP Packet Forwarder**
 
-## Supported hardware
+This implementation has been tested successfully on the **Bobcat 300 G285** with:
 
-| Model | Status | Notes |
-|--------|--------|-------|
-| G285 | ✅ Supported | Safe SD-card installation (no eMMC modifications) |
-| G290 | 🟡 Use Bobcat-Armbian | Different installation method |
-| G295 | 🟡 Use Bobcat-Armbian | Different installation method |
+* SX1302 LoRa concentrator
+* EU868 region
+* The Things Network V3
+* Ethernet connection
+* Docker based packet forwarder
+
+The UDP packet forwarder is currently the stable version of this project.
 
 ---
 
-## Specifications
+# Future development
 
-### Hardware
+The next development step is to move towards:
 
-- Bobcat 300 G285
-- Semtech SX1302 LoRa concentrator
-- Ethernet backhaul
-- Runs entirely from microSD
-- Original eMMC remains untouched
+**Semtech Basic Station**
 
-### Supported LoRaWAN Regions
+Basic Station is the newer gateway protocol and offers advantages such as:
 
-- 🇪🇺 EU868 (tested)
-- Other regions can be configured by editing the Basic Station configuration.
+* Secure WebSocket connection
+* Better gateway management
+* CUPS support
+* Easier future integration with The Things Stack
 
-### Supported Data Rates
+The goal is to add Basic Station support while keeping the current UDP installation available as a reliable fallback.
 
-Supports the complete LoRaWAN EU868 data rate range, including:
+---
 
-- SF7BW125
-- SF8BW125
-- SF9BW125
-- SF10BW125
-- SF11BW125
-- SF12BW125
+# Features
 
-### Gateway Software
+* ✅ Designed specifically for the **Bobcat 300 G285**
+* ✅ Runs entirely from a microSD card
+* ✅ Original Helium firmware remains untouched
+* ✅ Nothing is written to the internal eMMC
+* ✅ Converts the G285 into a TTN LoRaWAN gateway
+* ✅ Uses Semtech UDP Packet Forwarder
+* ✅ Automatic Gateway EUI detection
+* ✅ Docker based gateway operation
+* ✅ Safe and reversible installation
+* 🟡 Basic Station support planned
 
-- Armbian Linux
-- Semtech Basic Station
-- The Things Stack (TTN V3)
-- CUPS/LNS support
+---
 
-### Network
+# Supported hardware
 
-- Ethernet or WiFi (use standard Linux init and contact the G285 by Putty with an SSH connection)
-- DHCP
-- NTP time synchronization
-- Automatic reconnect
+| Model | Status                | Notes                                             |
+| ----- | --------------------- | ------------------------------------------------- |
+| G285  | ✅ Supported           | Safe SD-card installation (no eMMC modifications) |
+| G290  | 🟡 Use Bobcat-Armbian | Different installation method                     |
+| G295  | 🟡 Use Bobcat-Armbian | Different installation method                     |
 
+---
+
+# Specifications
+
+## Hardware
+
+* Bobcat 300 G285
+* Semtech SX1302 LoRa concentrator
+* Ethernet backhaul
+* microSD boot
+* Original eMMC remains untouched
+
+## Supported LoRaWAN Regions
+
+Currently tested:
+
+* 🇪🇺 EU868
+
+Other regions can be configured by changing the packet forwarder configuration.
+
+## Gateway Software
+
+Current:
+
+* Armbian Linux
+* Docker
+* Semtech UDP Packet Forwarder
+* The Things Network V3
+
+Future:
+
+* Semtech Basic Station
+* CUPS/LNS support
+
+## Network
+
+* Ethernet or WiFi
+* SSH access using PuTTY
+* DHCP
+* NTP time synchronization
+* Automatic reconnect after power loss
+
+---
 
 # Installation
 
@@ -100,28 +138,26 @@ Follow the complete Bobcat-Armbian installation guide:
 
 https://github.com/sicXnull/Bobcat-Armbian
 
-For the **Bobcat 300 G285**, complete **ALL** of the following sections:
+For the **Bobcat 300 G285**, complete:
 
-- ✅ G285 – SD Card Boot (No eMMC Flash Required)
-- ✅ First Boot
-- ✅ Helium Installation
+* ✅ G285 – SD Card Boot (No eMMC Flash Required)
+* ✅ First Boot
+* ✅ Helium Installation
 
-Do **not** continue until all three sections have been completed successfully.
+Do not continue until:
 
-At this point you should have:
+* Armbian boots from the microSD card
+* SSH access works
+* The SX1302 concentrator is detected
+* The original Helium installation has completed successfully
 
-- Armbian booting from the microSD card
-- SSH access (PuTTY)
-- A working Helium packet forwarder
-- A functioning SX1302 LoRa concentrator
-
-The original firmware should still be safely stored on the internal eMMC.
+The original firmware remains stored safely on the internal eMMC.
 
 ---
 
-## Step 2 — Connect to the gateway
+# Step 2 — Connect to the gateway
 
-Open **PuTTY** (or another SSH client) and connect to your Bobcat G285.
+Use **PuTTY** or another SSH client.
 
 Example:
 
@@ -130,64 +166,73 @@ Host: 192.168.1.xxx
 Port: 22
 ```
 
-Login using your Armbian username and password.
+Login with your Armbian credentials.
 
 ---
 
-## Step 3 — Install Bobcat300-TTN
+# Step 3 — Install TTN UDP Packet Forwarder
 
-Download and run the installer:
+Download and run:
 
 ```bash
-wget https://raw.githubusercontent.com/AdvdLaar/Bobcat300-TTN/main/install_ttn.sh
-chmod +x install_ttn.sh
-./install_ttn.sh
+wget https://raw.githubusercontent.com/AdvdLaar/Bobcat300-TTN/main/install_ttn_udp.sh
+
+chmod +x install_ttn_udp.sh
+
+./install_ttn_udp.sh
 ```
 
-The installer will automatically:
+The installer will:
 
-- Stop the Helium packet forwarder
-- Install Semtech Basic Station
-- Configure the Gateway EUI
-- Configure CUPS/LNS
-- Enable automatic startup
-- Reboot the gateway
-
----
-
-## Step 4 — Register your gateway
-
-After the reboot your gateway is running **Semtech Basic Station**.
-
-Register the gateway in **The Things Network (TTN)** using your Gateway EUI.
-
-Once registered, the gateway should appear online within a few seconds.
+* Detect the correct network MAC address
+* Create the Gateway EUI
+* Configure TTN UDP settings
+* Remove the Helium miner container from the Docker setup
+* Create a TTN-only packet forwarder
+* Start the LoRa gateway automatically
 
 ---
 
-## That's it!
+# Step 4 — Register the gateway in TTN
 
-Your Bobcat 300 G285 has now been converted into a fully functional TTN gateway while the original Helium firmware remains safely stored on the internal eMMC.
+Create a gateway in:
 
-Want to go back to Helium?
+https://console.cloud.thethings.network/
 
-Simply remove the microSD card and reboot the hotspot.
+Use the Gateway EUI shown by the installer.
 
+The gateway should appear online after startup.
 
-## Credits
+---
+
+# That's it!
+
+Your **Bobcat 300 G285** is now running as a TTN LoRaWAN gateway.
+
+The original Helium firmware remains untouched.
+
+To return to the original Helium hotspot:
+
+1. Power off the gateway
+2. Remove the microSD card
+3. Reboot
+
+---
+
+# Credits
 
 This project would not have been possible without the outstanding work of **sicXnull**, who successfully ported **Armbian** to the Bobcat 300 platform.
 
-My project builds upon that foundation and adds an easy, safe and fully reversible installation of **The Things Network (TTN)** for the **Bobcat 300 G285**.
+This project builds upon that foundation and adds an easy, safe and reversible installation of **The Things Network (TTN)** for the **Bobcat 300 G285**.
 
-### Original Bobcat-Armbian project
+## Original Bobcat-Armbian project
 
 https://github.com/sicXnull/Bobcat-Armbian
 
-### Armbian forum discussion
+## Armbian forum discussion
 
 https://forum.armbian.com/topic/57321-armbian-for-bobcat-300-29x-helium-miner/
 
-Many thanks to **sicXnull** for making Armbian available for the Bobcat platform and for sharing all of the hard work with the community.
+Many thanks to **sicXnull** for making Armbian available for the Bobcat platform and sharing this work with the community.
 
 ---
