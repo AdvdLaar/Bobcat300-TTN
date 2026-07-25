@@ -2,8 +2,11 @@
 
 set -e  # Exit on error
 
+SCRIPT_VERSION="1.0.0"
+
 echo "=========================================="
-echo " Bobcat 300 G285 -> TTN UDP Gateway"
+echo " Bobcat 300 -> TTN UDP Gateway Installer"
+echo " Version ${SCRIPT_VERSION}"
 echo "=========================================="
 echo ""
 
@@ -39,15 +42,6 @@ esac
 echo "Selected: $TTN_SERVER ($BAND)"
 echo ""
 
-# Install Docker and Docker Compose
-echo "Installing Docker and Docker Compose..."
-apt-get update
-apt-get install -y docker.io docker-compose wget unzip
-
-# Start and enable Docker service
-systemctl start docker
-systemctl enable docker
-
 # Get hostname
 HOSTNAME=$(hostname)
 
@@ -56,17 +50,7 @@ INSTALL_DIR="/opt/bobcat-ttn"
 mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
-# Download repository as ZIP
-echo "Downloading Bobcat300-DebianMinimalDocker..."
-wget -q https://github.com/sicXnull/Bobcat300-DebianMinimalDocker/archive/refs/heads/main.zip
-unzip -q main.zip
-mv Bobcat300-DebianMinimalDocker-main Bobcat300-DebianMinimalDocker
-rm main.zip
-
-REPO="$INSTALL_DIR/Bobcat300-DebianMinimalDocker"
-cd "$REPO"
-
-echo "Repository downloaded to: $REPO"
+echo "Detected hostname: $HOSTNAME"
 echo ""
 
 # Determine compose file and spidev path based on hostname
@@ -85,18 +69,127 @@ case "$HOSTNAME" in
         ;;
 esac
 
-echo "Detected hostname: $HOSTNAME"
 echo "Using compose file: $COMPOSE_FILE"
 echo "SPI device path: $SPIDEV_PATH"
 echo ""
 
-# Start containers with extended timeout (300 seconds = 5 minutes)
+# Verify SPI device exists
+if [ ! -e "$SPIDEV_PATH" ]; then
+    echo "ERROR: SPI device not found: $SPIDEV_PATH"
+    echo ""
+    echo "The correct kernel or device tree may not be installed."
+    exit 1
+fi
+
+# CLEANUP: Handle existing installations
+echo "=========================================="
+echo " Cleaning up existing installations"
+echo "=========================================="
+echo ""
+
+# Stop Docker daemon first
+echo "Stopping Docker service..."
+systemctl stop docker || true
+sleep 2
+
+# Remove old installation directory if it exists
+echo "Removing previous installation files if present..."
+
+if [ -d "$INSTALL_DIR/Bobcat300-DebianMinimalDocker" ]; then
+    echo "  Removing Bobcat300-DebianMinimalDocker..."
+    rm -rf "$INSTALL_DIR/Bobcat300-DebianMinimalDocker"
+fi
+
+if [ -d "$INSTALL_DIR/Bobcat300-DebianMinimalDocker-main" ]; then
+    echo "  Removing Bobcat300-DebianMinimalDocker-main..."
+    rm -rf "$INSTALL_DIR/Bobcat300-DebianMinimalDocker-main"
+fi
+
+if [ -f "$INSTALL_DIR/main.zip" ]; then
+    echo "  Removing main.zip..."
+    rm -f "$INSTALL_DIR/main.zip"
+fi
+
+# Start Docker daemon again
+echo "Starting Docker service..."
+systemctl start docker || true
+sleep 2
+
+# Clean up all Docker containers and images
+echo "Cleaning up Docker containers and images..."
+docker stop $(docker ps -q 2>/dev/null) 2>/dev/null || true
+docker rm $(docker ps -aq 2>/dev/null) 2>/dev/null || true
+docker system prune -af --volumes 2>/dev/null || true
+
+echo "Cleanup complete!"
+echo ""
+
+# Install required packages
+echo "=========================================="
+echo " Installing required packages"
+echo "=========================================="
+echo ""
+
+echo "Checking and installing Docker, Docker Compose, wget, unzip..."
+apt update
+apt install -y docker.io docker-compose wget unzip
+
+# Start and enable Docker service
+systemctl start docker
+systemctl enable docker
+
+echo "Packages installed!"
+echo ""
+
+# Download repository
+echo "=========================================="
+echo " Downloading Bobcat300-DebianMinimalDocker"
+echo "=========================================="
+echo ""
+
+cd "$INSTALL_DIR"
+
+echo "Downloading repository..."
+wget -q https://github.com/sicXnull/Bobcat300-DebianMinimalDocker/archive/refs/heads/main.zip
+
+if [ ! -f main.zip ]; then
+    echo "ERROR: Download failed."
+    exit 1
+fi
+
+unzip -q main.zip || {
+    echo "ERROR: Failed to extract repository."
+    exit 1
+}
+mv Bobcat300-DebianMinimalDocker-main Bobcat300-DebianMinimalDocker
+rm -f main.zip
+if [ ! -d "$INSTALL_DIR/Bobcat300-DebianMinimalDocker" ]; then
+    echo "ERROR: Repository extraction failed."
+    exit 1
+fi
+
+REPO="$INSTALL_DIR/Bobcat300-DebianMinimalDocker"
+if [ ! -f "$REPO/$COMPOSE_FILE" ]; then
+    echo "ERROR: $COMPOSE_FILE not found."
+    exit 1
+fi
+cd "$REPO"
+
+echo "Repository downloaded to: $REPO"
+echo ""
+
+# Start containers
+echo "=========================================="
+echo " Starting Docker containers"
+echo "=========================================="
+echo ""
+
 echo "Starting Docker containers..."
 echo "This may take several minutes. Please wait..."
 export COMPOSE_HTTP_TIMEOUT=300
 docker-compose -f "$COMPOSE_FILE" up -d
 
-# Wait until containers are ready (max 120 seconds)
+# Wait until containers are ready
 echo "Waiting for gateway initialization..."
 WAIT_TIME=0
 MAX_WAIT=120
@@ -117,11 +210,18 @@ fi
 # Extra buffer for config generation
 sleep 5
 
+# Configure gateway
+echo ""
+echo "=========================================="
+echo " Configuring TTN gateway"
+echo "=========================================="
+echo ""
+
 echo "Updating configuration..."
 CONFIG="$REPO/packet_forwarder/configs/global_conf.json"
 
 if [ ! -f "$CONFIG" ]; then
-    echo "ERROR: global_conf.json not found."
+    echo "ERROR: global_conf.json not found at $CONFIG"
     exit 1
 fi
 
@@ -152,13 +252,13 @@ fi
 
 GWID="${MAC:0:6}FFFE${MAC:6:6}"
 
-echo "Interface: $IFACE"
+echo "Network Interface: $IFACE"
 echo "MAC Address: $MAC"
 echo "Gateway EUI: $GWID"
 echo ""
 
 # Update TTN configuration with selected region
-echo "Configuring TTN..."
+echo "Applying TTN configuration..."
 sed -i \
     -e "s/\"gateway_ID\": \".*\"/\"gateway_ID\": \"$GWID\"/" \
     -e "s/\"server_address\": \".*\"/\"server_address\": \"$TTN_SERVER\"/" \
@@ -170,9 +270,17 @@ sed -i \
 echo "Restarting containers with new configuration..."
 docker-compose -f "$COMPOSE_FILE" restart
 
-# Wait for restart
+echo "Waiting for containers to restart..."
 sleep 10
 
+if ! docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+    echo ""
+    echo "ERROR: Containers are not running."
+    docker-compose -f "$COMPOSE_FILE" ps
+    exit 1
+fi
+
+# Final status
 echo ""
 echo "=========================================="
 echo " TTN UDP Gateway Installation Complete!"
@@ -186,11 +294,25 @@ echo "  Region: $BAND"
 echo "  UDP Port: 1700"
 echo "  Install Path: $REPO"
 echo ""
-echo "To view logs:"
+echo "NEXT STEPS:"
+echo ""
+echo "1. Register your gateway in TTN Console:"
+echo "   https://console.cloud.thethings.network/"
+echo ""
+echo "2. Use this Gateway EUI: $GWID"
+echo ""
+echo "3. Verify the gateway is online"
+echo ""
+echo "USEFUL COMMANDS:"
+echo ""
+echo "View logs:"
 echo "  cd $REPO"
 echo "  docker-compose logs -f"
 echo ""
-echo "To stop gateway:"
+echo "Check gateway info:"
+echo "  showgatewayinfo.sh"
+echo ""
+echo "Stop gateway:"
 echo "  cd $REPO"
 echo "  docker-compose down"
 echo ""
