@@ -23,4 +23,4 @@ volumes:
   - ./packet_forwarder/tools:/opt/packet_forwarder/tools
   - ./packet_forwarder/tools/entrypoint.sh.bobcat:/opt/packet_forwarder/entrypoint.sh:ro
   
-    restart: always
+restart: always
