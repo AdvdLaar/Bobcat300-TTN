@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.0"
+SCRIPT_VERSION="1.3.1"
 INSTALL_DIR="/opt/bobcat-ttn"
-REPO_URL="https://github.com/AdvdLaar/Bobcat300-TTN.git"
+REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
 echo "=========================================="
 echo " Bobcat 300 -> TTN UDP Gateway Installer"
 echo " Version ${SCRIPT_VERSION}"
-echo " Source: $REPO_URL"
+echo " Source: https://github.com/AdvdLaar/Bobcat300-TTN"
 echo "=========================================="
 echo ""
 
@@ -108,9 +108,9 @@ echo "=========================================="
 echo " Installing required packages"
 echo "=========================================="
 echo ""
-echo "Checking and installing Docker, Docker Compose, git..."
+echo "Checking and installing Docker, Docker Compose, wget, unzip..."
 apt update
-apt install -y docker.io docker-compose git
+apt install -y docker.io docker-compose wget unzip
 
 systemctl start docker
 systemctl enable docker
@@ -118,18 +118,44 @@ echo "Packages installed!"
 echo ""
 
 # ==================================================
-# CLONE YOUR REPO TO /opt/bobcat-ttn
+# DOWNLOAD & EXTRACT YOUR REPO
 # ==================================================
 echo "=========================================="
-echo " Cloning repository to $INSTALL_DIR"
+echo " Downloading repository to $INSTALL_DIR"
 echo "=========================================="
 echo ""
 
-echo "Cloning $REPO_URL ..."
-git clone --depth 1 "$REPO_URL" "$INSTALL_DIR"
+mkdir -p "$INSTALL_DIR"
+cd "$INSTALL_DIR"
+
+echo "Downloading $REPO_ZIP_URL ..."
+wget -q "$REPO_ZIP_URL" -O main.zip
+
+if [ ! -f main.zip ]; then
+    echo "ERROR: Download failed."
+    exit 1
+fi
+
+echo "Extracting..."
+unzip -q main.zip || {
+    echo "ERROR: Failed to extract repository."
+    exit 1
+}
+
+# GitHub creates a folder named Bobcat300-TTN-main
+if [ -d "Bobcat300-TTN-main" ]; then
+    mv Bobcat300-TTN-main/* .
+    mv Bobcat300-TTN-main/.* . 2>/dev/null || true
+    rmdir Bobcat300-TTN-main
+else
+    echo "ERROR: Unexpected folder structure after unzip."
+    exit 1
+fi
+
+rm -f main.zip
 
 if [ ! -d "$INSTALL_DIR/packet_forwarder" ]; then
-    echo "ERROR: Clone failed or packet_forwarder directory missing."
+    echo "ERROR: packet_forwarder directory not found after extraction."
     exit 1
 fi
 
@@ -137,12 +163,12 @@ PACKET_FORWARDER_DIR="$INSTALL_DIR/packet_forwarder"
 COMPOSE_PATH="$PACKET_FORWARDER_DIR/$COMPOSE_FILE"
 
 if [ ! -f "$COMPOSE_PATH" ]; then
-    echo "ERROR: Compose file not found after clone:"
+    echo "ERROR: Compose file not found after download:"
     echo "  $COMPOSE_PATH"
     exit 1
 fi
 
-echo "Repository cloned successfully to $INSTALL_DIR"
+echo "Repository downloaded and extracted successfully to $INSTALL_DIR"
 echo ""
 
 # ==================================================
