@@ -1,26 +1,19 @@
 version: '3'
-
 services:
   pktfwd:
     image: ghcr.io/heliumdiy/sx1302_hal:sha-87d8931
     entrypoint: ["/opt/packet_forwarder/entrypoint.sh"]
     working_dir: /opt/packet_forwarder
-
     environment:
       VENDOR: bobcat
       REGION: EU868
-
     privileged: true
-
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-
-volumes:
-  - ./packet_forwarder/configs:/opt/packet_forwarder/configs
-  - ./packet_forwarder/tools:/opt/packet_forwarder/tools
-  - ./packet_forwarder/tools/entrypoint.sh.bobcat:/opt/packet_forwarder/entrypoint.sh:ro
-  
-restart: always
+    volumes:
+      - ./packet_forwarder/configs:/opt/packet_forwarder/configs
+      - ./packet_forwarder/tools:/opt/packet_forwarder/tools
+    restart: always

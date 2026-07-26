@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.2"
+SCRIPT_VERSION="1.3.5"
 INSTALL_DIR="/opt/bobcat-ttn"
 REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
