@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.1"
+SCRIPT_VERSION="1.3.2"
 INSTALL_DIR="/opt/bobcat-ttn"
 REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
@@ -28,20 +28,52 @@ echo ""
 read -p "Select region [1]: " REGION
 REGION=${REGION:-1}
 
-case $REGION in
-    1) TTN_SERVER="eu1.cloud.thethings.network"; BAND="EU868" ;;
-    2) TTN_SERVER="nam1.cloud.thethings.network"; BAND="US915" ;;
-    3) TTN_SERVER="as1.cloud.thethings.network"; BAND="AS923" ;;
-    4) TTN_SERVER="au1.cloud.thethings.network"; BAND="AU915" ;;
-    5) TTN_SERVER="in1.cloud.thethings.network"; BAND="IN865" ;;
-    6) TTN_SERVER="ru1.cloud.thethings.network"; BAND="RU864" ;;
-    7) TTN_SERVER="cn1.cloud.thethings.network"; BAND="CN470" ;;
-    8) TTN_SERVER="jp1.cloud.thethings.network"; BAND="JP923" ;;
-    9) TTN_SERVER="kr1.cloud.thethings.network"; BAND="KR920" ;;
-    *) TTN_SERVER="eu1.cloud.thethings.network"; BAND="EU868" ;;
+case "$REGION" in
+    1)
+        TTN_SERVER="eu1.cloud.thethings.network"
+        BAND="EU868"
+        ;;
+    2)
+        TTN_SERVER="nam1.cloud.thethings.network"
+        BAND="US915"
+        ;;
+    3)
+        TTN_SERVER="as1.cloud.thethings.network"
+        BAND="AS923"
+        ;;
+    4)
+        TTN_SERVER="au1.cloud.thethings.network"
+        BAND="AU915"
+        ;;
+    5)
+        TTN_SERVER="in1.cloud.thethings.network"
+        BAND="IN865"
+        ;;
+    6)
+        TTN_SERVER="ru1.cloud.thethings.network"
+        BAND="RU864"
+        ;;
+    7)
+        TTN_SERVER="cn1.cloud.thethings.network"
+        BAND="CN470"
+        ;;
+    8)
+        TTN_SERVER="jp1.cloud.thethings.network"
+        BAND="JP923"
+        ;;
+    9)
+        TTN_SERVER="kr1.cloud.thethings.network"
+        BAND="KR920"
+        ;;
+    *)
+        TTN_SERVER="eu1.cloud.thethings.network"
+        BAND="EU868"
+        ;;
 esac
 
-echo "Selected: $TTN_SERVER ($BAND)"
+echo "Selected:"
+echo "  Frequency Plan : $BAND"
+echo "  TTN Server     : $TTN_SERVER"
 echo ""
 
 # Get hostname
@@ -51,18 +83,27 @@ echo ""
 
 # Determine compose file and spidev path based on hostname
 case "$HOSTNAME" in
-    bobcat-29x)
-        COMPOSE_FILE="docker-compose-G29X.yml"
-        SPIDEV_PATH="/dev/spidev5.0"
-        ;;
+
     bobcat-285)
         COMPOSE_FILE="docker-compose-G285.yml"
         SPIDEV_PATH="/dev/spidev1.0"
         ;;
+
+    bobcat-280)
+        COMPOSE_FILE="docker-compose-G280.yml"
+        SPIDEV_PATH="/dev/spidev1.0"
+        ;;
+
+    bobcat-29*|bobcat-g29*)
+        COMPOSE_FILE="docker-compose-G29X.yml"
+        SPIDEV_PATH="/dev/spidev5.0"
+        ;;
+
     *)
-        echo "Error: Unknown hostname '$HOSTNAME'. Expected 'bobcat-29x' or 'bobcat-285'"
+        echo "Error: Unknown hostname '$HOSTNAME'"
         exit 1
         ;;
+
 esac
 
 echo "Using compose file: $COMPOSE_FILE"
@@ -109,11 +150,24 @@ echo " Installing required packages"
 echo "=========================================="
 echo ""
 echo "Checking and installing Docker, Docker Compose, wget, unzip..."
+
 apt update
-apt install -y docker.io docker-compose wget unzip
+if ! command -v docker >/dev/null 2>&1; then
+    apt install -y docker.io docker-compose
+fi
+
+apt install -y wget unzip
 
 systemctl start docker
 systemctl enable docker
+
+if ! docker info >/dev/null 2>&1; then
+    echo "ERROR: Docker is not running."
+    exit 1
+fi
+
+echo "Docker is running."
+
 echo "Packages installed!"
 echo ""
 
@@ -129,7 +183,7 @@ mkdir -p "$INSTALL_DIR"
 cd "$INSTALL_DIR"
 
 echo "Downloading $REPO_ZIP_URL ..."
-wget -q "$REPO_ZIP_URL" -O main.zip
+wget -q "$REPO_ZIP_URL" -O main.zip --show-progress
 
 if [ ! -f main.zip ]; then
     echo "ERROR: Download failed."
@@ -171,6 +225,13 @@ fi
 echo "Repository downloaded and extracted successfully to $INSTALL_DIR"
 echo ""
 
+# Update selected LoRaWAN frequency plan in Docker Compose
+echo "Setting frequency plan to $BAND..."
+sed -i -E "s/(REGION:[[:space:]]*).*/\1$BAND/" "$COMPOSE_PATH"
+
+echo "Frequency plan updated."
+echo ""
+
 # ==================================================
 # START CONTAINERS
 # ==================================================
@@ -184,6 +245,12 @@ echo "This may take several minutes. Please wait..."
 cd "$PACKET_FORWARDER_DIR"
 export COMPOSE_HTTP_TIMEOUT=300
 docker-compose -f "$COMPOSE_FILE" up -d
+
+if ! docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+    echo "ERROR: Docker containers failed to start."
+    docker-compose -f "$COMPOSE_FILE" logs
+    exit 1
+fi
 
 # Wait until containers are ready
 echo "Waiting for gateway initialization..."
@@ -202,8 +269,24 @@ if [ $WAIT_TIME -ge $MAX_WAIT ]; then
     echo "WARNING: Containers took longer than $MAX_WAIT seconds to start"
 fi
 
-# Extra buffer so the container can create the configs directory
-sleep 8
+CONFIG="$PACKET_FORWARDER_DIR/packet_forwarder/configs/global_conf.json"
+
+echo "Waiting for global_conf.json..."
+
+WAIT_CONFIG=0
+MAX_CONFIG_WAIT=120
+
+while [ ! -f "$CONFIG" ] && [ $WAIT_CONFIG -lt $MAX_CONFIG_WAIT ]; do
+    sleep 2
+    WAIT_CONFIG=$((WAIT_CONFIG + 2))
+done
+
+if [ ! -f "$CONFIG" ]; then
+    echo "ERROR: global_conf.json was not created within $MAX_CONFIG_WAIT seconds."
+    echo "Check container logs:"
+    echo "  docker-compose -f $COMPOSE_FILE logs"
+    exit 1
+fi
 
 # ==================================================
 # CONFIGURE GATEWAY
@@ -214,9 +297,6 @@ echo " Configuring TTN gateway"
 echo "=========================================="
 echo ""
 echo "Updating configuration..."
-
-# Exact path: next to the tools/ directory (created by the container)
-CONFIG="$PACKET_FORWARDER_DIR/packet_forwarder/configs/global_conf.json"
 
 if [ ! -f "$CONFIG" ]; then
     echo "ERROR: global_conf.json not found at:"
@@ -288,39 +368,42 @@ fi
 # FINAL STATUS
 # ==================================================
 echo ""
+echo "Checking gateway status..."
+
+if docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+    echo "Status : RUNNING"
+else
+    echo "Status : FAILED"
+fi
+
+echo ""
 echo "=========================================="
 echo " TTN UDP Gateway Installation Complete!"
 echo "=========================================="
 echo ""
-echo "Gateway Information:"
-echo " Hostname: $HOSTNAME"
-echo " Gateway EUI: $GWID"
-echo " TTN Server: $TTN_SERVER"
-echo " Region: $BAND"
-echo " UDP Port: 1700"
-echo " Install Path: $INSTALL_DIR"
-echo " Compose file: $COMPOSE_PATH"
-echo " Config file: $CONFIG"
+echo "Gateway successfully configured."
 echo ""
-echo "NEXT STEPS:"
+echo "Gateway EUI : $GWID"
+echo "Region      : $BAND"
+echo "TTN Server  : $TTN_SERVER"
 echo ""
-echo "1. Register your gateway in TTN Console:"
-echo "   https://console.cloud.thethings.network/"
+echo "NEXT STEP"
+echo "---------"
+echo "Register this gateway in The Things Stack:"
 echo ""
-echo "2. Use this Gateway EUI: $GWID"
+echo "https://console.cloud.thethings.network/"
 echo ""
-echo "3. Verify the gateway is online"
+echo "Gateway EUI:"
+echo "  $GWID"
 echo ""
-echo "USEFUL COMMANDS:"
+echo "After registration the gateway should appear ONLINE within about a minute."
 echo ""
-echo "View logs:"
+echo "Useful commands:"
+echo ""
+echo "View live logs:"
 echo "  cd $PACKET_FORWARDER_DIR"
 echo "  docker-compose -f $COMPOSE_FILE logs -f"
 echo ""
-echo "Check gateway info:"
+echo "Show gateway information:"
 echo "  $INSTALL_DIR/showgatewayinfo.sh"
-echo ""
-echo "Stop gateway:"
-echo "  cd $PACKET_FORWARDER_DIR"
-echo "  docker-compose -f $COMPOSE_FILE down"
 echo ""

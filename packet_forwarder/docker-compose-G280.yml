@@ -1,84 +1,26 @@
-version: "3.8"
+version: '3'
 
 services:
   pktfwd:
-    image: crankkster/pktfwd:alpha
-    container_name: pktfwd
-    privileged: true
-    network_mode: host
-    restart: always
+    image: ghcr.io/heliumdiy/sx1302_hal:sha-87d8931
+    entrypoint: ["/opt/packet_forwarder/entrypoint.sh"]
+    working_dir: /opt/packet_forwarder
 
     environment:
-      MULTIPLEXER: "1"
-      ANTENNA_GAIN: "2"
-      MODEL: bobcat
-      MODEL_VARIANT: "1"
-      FORWARD: 127.0.0.1:1680
-      REGION: US915
-      SPI_DEV_PATH: /dev/spidev1.0
-      PORT: "17000"
+      VENDOR: bobcat
+      REGION: EU868
+
+    privileged: true
+
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 
     volumes:
-      - pktfwd_data:/data
+      - ./packet_forwarder/configs:/opt/packet_forwarder/configs
+      - ./packet_forwarder/tools:/opt/packet_forwarder/tools
+      - ./packet_forwarder/tools/entrypoint.sh.bobcat:/opt/packet_forwarder/entrypoint.sh:ro      
 
-    entrypoint:
-      - /bin/sh
-      - -ec
-      - |
-          # Generate gateway ID if missing OR empty
-          if [ ! -s /data/gateway_id ]; then
-            echo "Generating gateway ID..."
-            if command -v hexdump >/dev/null 2>&1; then
-              hexdump -n 8 -v -e '/1 "%02x"' /dev/urandom > /data/gateway_id
-            else
-              od -An -N8 -tx1 /dev/urandom | tr -d ' \n' > /data/gateway_id
-            fi
-            echo >> /data/gateway_id
-          fi
-
-          export ID=$$(tr -d '\r\n' < /data/gateway_id)
-          echo "Using gateway ID: $$ID"
-
-          # Run original image entrypoint + cmd
-          exec docker-entrypoint.sh /bin/sh -c "./entrypoint.sh"
-
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-    depends_on:
-      - miner
-
-  miner:
-    image: quay.io/team-helium/miner:gateway-latest
-    container_name: miner
-    privileged: true
-    network_mode: host
-    restart: unless-stopped
-
-    command:
-      - helium_gateway
-      - server
-
-    environment:
-      RUST_BACKTRACE: "1"
-      GW_LISTEN: 0.0.0.0:1680
-      GW_KEYPAIR: ecc://i2c-1:96?slot=0
-      GW_ONBOARDING: ecc://i2c-1:96?slot=15
-
-    devices:
-      - /dev/i2c-1:/dev/i2c-1
-
-    security_opt:
-      - label=disable
-
-    logging:
-      driver: json-file
-      options:
-        max-size: "10m"
-        max-file: "3"
-
-volumes:
-  pktfwd_data:
+    restart: always
