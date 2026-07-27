@@ -255,6 +255,7 @@ Many thanks to **sicXnull** for making Armbian available for the Bobcat platform
 ---
 
 ---
+---
 
 # Technical Details
 
@@ -275,3 +276,125 @@ Hardware details:
 - SPI device: `/dev/spidev1.0`
 
 LoRa hardware architecture:
+
+            LoRa Antenna
+                 |
+      +----------+----------+
+      |                     |
+  SX1250 Radio 0       SX1250 Radio 1
+      |                     |
+      +----------+----------+
+                 |
+              SX1302
+                 |
+               SPI
+                 |
+            RK3566 CPU
+
+
+The packet forwarder communicates with the SX1302 concentrator.  
+The SX1302 controls and configures both SX1250 radio chips.
+
+---
+
+## Known Working Configuration
+
+The following configuration has been tested successfully:
+
+- Armbian booting from microSD card
+- Docker-based installation
+- SX1302 communication over SPI
+- SX1250 radio initialization
+- TTN UDP Packet Forwarder connection
+- The Things Network gateway operation
+
+The original Helium Docker software is **not required**.
+
+The gateway operates independently as a standard TTN LoRaWAN gateway.
+
+---
+
+## Why No Helium Software Is Required
+
+The Bobcat hardware contains a standard LoRaWAN concentrator.
+
+The Helium software stack is not required to operate the device as a TTN gateway.
+
+This project uses only the required components:
+
+- Armbian
+- Docker
+- LoRa packet forwarder
+- TTN configuration
+
+Advantages:
+
+- Less software overhead
+- Fewer dependencies
+- Easier maintenance
+- No dependency on Helium updates
+
+---
+
+## Current Radio Configuration
+
+The working radio configuration:
+
+Radio 0:
+Chip: SX1250
+Frequency: 867.5 MHz
+
+Radio 1:
+Chip: SX1250
+Frequency: 868.5 MHz
+
+
+The SX1302 concentrator handles LoRa channel processing and communication between the two SX1250 radios.
+
+---
+
+## Troubleshooting
+
+Check SPI availability:
+
+```bash
+ls -l /dev/spidev*
+
+Expected:
+
+/dev/spidev1.0
+
+Check Docker containers:
+
+docker ps
+
+View packet forwarder logs:
+
+docker logs <container_name>
+
+A successful installation should show the gateway connecting to The Things Network.
+
+Future Basic Station Support
+
+Basic Station support may be added in the future.
+
+The current hardware research has already confirmed:
+
+SX1302 communication is working
+SX1250 radio configuration is known
+SPI configuration is known
+GPIO/reset handling is known
+TLS/WSS communication has been tested successfully
+
+Basic Station would use the same hardware layer and only replace the packet forwarding software.
+
+Credits and References
+
+Hardware support is based on research and testing with:
+
+Bobcat 300 G285 hardware
+Armbian for Bobcat devices
+The Things Network documentation
+Semtech SX1302/SX1250 documentation
+
+Special thanks to the open-source community for making hardware reuse possible.
