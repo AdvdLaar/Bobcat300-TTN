@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.7"
+SCRIPT_VERSION="1.3.8"
 INSTALL_DIR="/opt/bobcat-ttn"
 REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
@@ -253,12 +253,6 @@ echo "Starting pktfwd container temporarily..."
 docker-compose -f "$COMPOSE_PATH" up -d pktfwd
 sleep 1
 docker-compose -f "$COMPOSE_PATH" down
-
-if ! docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
-    echo "ERROR: Docker containers failed to start."
-    docker-compose -f "$COMPOSE_PATH" logs
-    exit 1
-fi
 
 # Wait until containers are ready
 echo "Waiting for gateway initialization..."
