@@ -253,3 +253,25 @@ https://forum.armbian.com/topic/57321-armbian-for-bobcat-300-29x-helium-miner/
 Many thanks to **sicXnull** for making Armbian available for the Bobcat platform and sharing this work with the community.
 
 ---
+
+---
+
+# Technical Details
+
+## Hardware Support
+
+This project is specifically designed for the **Bobcat 300 G285** LoRaWAN gateway.
+
+The gateway runs completely from a **microSD card using Armbian**. The internal eMMC is not modified. The original Helium firmware remains untouched.
+
+Hardware details:
+
+- Device: Bobcat 300 G285
+- CPU: Rockchip RK3566
+- Operating system: Armbian (microSD)
+- LoRa concentrator: Semtech SX1302
+- RF transceivers: 2x Semtech SX1250
+- Communication interface: SPI
+- SPI device: `/dev/spidev1.0`
+
+LoRa hardware architecture:
