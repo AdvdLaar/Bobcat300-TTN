@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.5"
+SCRIPT_VERSION="1.3.7"
 INSTALL_DIR="/opt/bobcat-ttn"
 REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
@@ -216,6 +216,7 @@ fi
 PACKET_FORWARDER_DIR="$INSTALL_DIR/packet_forwarder"
 COMPOSE_PATH="$PACKET_FORWARDER_DIR/$COMPOSE_FILE"
 
+
 echo "Preparing Bobcat scripts..."
 
 chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh.bobcat"
@@ -246,13 +247,16 @@ echo ""
 echo "Starting Docker containers..."
 echo "This may take several minutes. Please wait..."
 
-cd "$PACKET_FORWARDER_DIR"
+cd "$INSTALL_DIR"
 export COMPOSE_HTTP_TIMEOUT=300
-docker-compose -f "$COMPOSE_FILE" up -d
+echo "Starting pktfwd container temporarily..."
+docker-compose -f "$COMPOSE_PATH" up -d pktfwd
+sleep 1
+docker-compose -f "$COMPOSE_PATH" down
 
-if ! docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+if ! docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
     echo "ERROR: Docker containers failed to start."
-    docker-compose -f "$COMPOSE_FILE" logs
+    docker-compose -f "$COMPOSE_PATH" logs
     exit 1
 fi
 
@@ -261,7 +265,7 @@ echo "Waiting for gateway initialization..."
 WAIT_TIME=0
 MAX_WAIT=120
 while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    if docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+    if docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
         echo "Containers are running!"
         break
     fi
@@ -356,15 +360,15 @@ sed -i \
 
 # Restart to apply config
 echo "Restarting containers with new configuration..."
-docker-compose -f "$COMPOSE_FILE" restart
+docker-compose -f "$COMPOSE_PATH" restart
 
 echo "Waiting for containers to restart..."
 sleep 10
 
-if ! docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+if ! docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
     echo ""
     echo "ERROR: Containers are not running."
-    docker-compose -f "$COMPOSE_FILE" ps
+    docker-compose -f "$COMPOSE_PATH" ps
     exit 1
 fi
 
@@ -374,7 +378,7 @@ fi
 echo ""
 echo "Checking gateway status..."
 
-if docker-compose -f "$COMPOSE_FILE" ps | grep -q "Up"; then
+if docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
     echo "Status : RUNNING"
 else
     echo "Status : FAILED"
