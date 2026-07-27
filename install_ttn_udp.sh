@@ -218,8 +218,7 @@ COMPOSE_PATH="$PACKET_FORWARDER_DIR/$COMPOSE_FILE"
 
 echo "Preparing Bobcat scripts..."
 
-chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/entrypoint.sh"
-chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh"
+chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh.bobcat"
 
 if [ ! -f "$COMPOSE_PATH" ]; then
     echo "ERROR: Compose file not found after download:"
