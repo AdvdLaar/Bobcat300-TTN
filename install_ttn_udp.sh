@@ -216,6 +216,17 @@ fi
 PACKET_FORWARDER_DIR="$INSTALL_DIR/packet_forwarder"
 COMPOSE_PATH="$PACKET_FORWARDER_DIR/$COMPOSE_FILE"
 
+echo "Preparing Bobcat scripts..."
+
+mv "$PACKET_FORWARDER_DIR/packet_forwarder/tools/entrypoint.sh.bobcat" \
+   "$PACKET_FORWARDER_DIR/packet_forwarder/tools/entrypoint.sh"
+
+mv "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh.bobcat" \
+   "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh"
+
+chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/entrypoint.sh"
+chmod +x "$PACKET_FORWARDER_DIR/packet_forwarder/tools/reset_lgw.sh"
+
 if [ ! -f "$COMPOSE_PATH" ]; then
     echo "ERROR: Compose file not found after download:"
     echo "  $COMPOSE_PATH"
