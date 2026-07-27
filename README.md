@@ -31,7 +31,7 @@ The gateway currently uses the proven and widely supported:
 This implementation has been tested successfully on the **Bobcat 300 G285** with:
 
 * SX1302 LoRa concentrator
-* EU868 region
+* EU868 region. Other regions can be selected during installation, but have not been tested.
 * The Things Network V3
 * Ethernet connection
 * Docker based packet forwarder
@@ -49,7 +49,8 @@ Basic Station is the newer gateway protocol and offers advantages such as:
 
 * Secure WebSocket connection
 * Better gateway management
-* CUPS & LNS support
+* Semtech Basic Station
+* LNS/CUPS remote management support
 * Easier future integration with The Things Stack
 
 The goal is to add Basic Station support while keeping the current UDP installation available as a reliable fallback.
@@ -96,7 +97,7 @@ The goal is to add Basic Station support while keeping the current UDP installat
 Currently tested:
 
 * 🇪🇺 EU868
-* You can choose another region. Not tested!
+* Other regions can be selected during installation, but have not been tested.
 
 Other regions can be configured by changing the packet forwarder configuration.
 
@@ -148,9 +149,11 @@ Do not continue until:
 * Armbian boots from the microSD card
 * SSH access works
 * The SX1302 concentrator is detected
-* You don't have to install anything else. Just Armbian
+* No Helium installation is required. Only a working Armbian installation is needed.
 
-The original firmware remains stored safely on the internal eMMC with the G285 model. Armbian goed onto the eMMC with models G29X.
+The original firmware remains stored on the internal eMMC on the G285 model.
+The G29X models use a different installation method where Armbian is installed differently. Please follow the original Bobcat-Armbian documentation for those models.
+
 
 ---
 
@@ -201,6 +204,13 @@ https://console.cloud.thethings.network/
 
 Use the Gateway EUI shown by the installer.
 
+When registering the gateway, select:
+
+* Protocol: Semtech UDP Packet Forwarder
+* Frequency plan: EU868 (or the selected region)
+
+Do not select Basic Station / CUPS, as this installation currently uses the UDP packet forwarder.
+
 The gateway should appear online after startup.
 
 ---
@@ -220,7 +230,7 @@ To return to the original Helium hotspot:
 # Known limitations
 
 * Currently tested with Ethernet only
-* WiFi configuration depends on the Armbian setup. I advicse only to use 1 connection. WiFi **OR** Ethernet
+* WiFi configuration depends on the Armbian setup. I advicse only to use one connection: WiFi **OR** Ethernet
 * Only EU868 has been tested so far
 * Basic Station support is planned but not implemented yet
   
