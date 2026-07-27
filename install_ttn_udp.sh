@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e # Exit on error
 
-SCRIPT_VERSION="1.3.8"
+SCRIPT_VERSION="1.3.9"
 INSTALL_DIR="/opt/bobcat-ttn"
 REPO_ZIP_URL="https://github.com/AdvdLaar/Bobcat300-TTN/archive/refs/heads/main.zip"
 
@@ -254,23 +254,6 @@ docker-compose -f "$COMPOSE_PATH" up -d pktfwd
 sleep 1
 docker-compose -f "$COMPOSE_PATH" down
 
-# Wait until containers are ready
-echo "Waiting for gateway initialization..."
-WAIT_TIME=0
-MAX_WAIT=120
-while [ $WAIT_TIME -lt $MAX_WAIT ]; do
-    if docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
-        echo "Containers are running!"
-        break
-    fi
-    sleep 2
-    WAIT_TIME=$((WAIT_TIME + 2))
-done
-
-if [ $WAIT_TIME -ge $MAX_WAIT ]; then
-    echo "WARNING: Containers took longer than $MAX_WAIT seconds to start"
-fi
-
 CONFIG="$PACKET_FORWARDER_DIR/packet_forwarder/configs/global_conf.json"
 
 echo "Waiting for global_conf.json..."
@@ -286,7 +269,7 @@ done
 if [ ! -f "$CONFIG" ]; then
     echo "ERROR: global_conf.json was not created within $MAX_CONFIG_WAIT seconds."
     echo "Check container logs:"
-    echo "  docker-compose -f $COMPOSE_FILE logs"
+    echo "  docker-compose -f $COMPOSE_PATH logs"
     exit 1
 fi
 
@@ -306,7 +289,7 @@ if [ ! -f "$CONFIG" ]; then
     echo ""
     echo "The container should have created the configs/ directory next to tools/."
     echo "Check the logs with:"
-    echo "  cd $PACKET_FORWARDER_DIR && docker-compose -f $COMPOSE_FILE logs"
+    echo "docker-compose -f $COMPOSE_PATH logs"
     exit 1
 fi
 
@@ -353,16 +336,32 @@ sed -i \
     "$CONFIG"
 
 # Restart to apply config
-echo "Restarting containers with new configuration..."
-docker-compose -f "$COMPOSE_PATH" restart
+echo "Launching TTN gateway..."
+docker-compose -f "$COMPOSE_PATH" up -d
 
-echo "Waiting for containers to restart..."
-sleep 10
+# Wait until containers are ready
+echo "Waiting for gateway initialization..."
+WAIT_TIME=0
+MAX_WAIT=120
 
-if ! docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
+while [ $WAIT_TIME -lt $MAX_WAIT ]; do
+    if docker-compose -f "$COMPOSE_PATH" ps | grep -q "Up"; then
+        echo "Containers are running!"
+        break
+    fi
+    sleep 2
+    WAIT_TIME=$((WAIT_TIME + 2))
+done
+
+if [ $WAIT_TIME -ge $MAX_WAIT ]; then
     echo ""
-    echo "ERROR: Containers are not running."
+    echo "ERROR: Containers failed to start within ${MAX_WAIT} seconds."
+    echo ""
+    echo "Container status:"
     docker-compose -f "$COMPOSE_PATH" ps
+    echo ""
+    echo "Container logs:"
+    docker-compose -f "$COMPOSE_PATH" logs
     exit 1
 fi
 
