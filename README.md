@@ -35,14 +35,13 @@ This implementation has been tested successfully on the **Bobcat 300 G285** with
 * The Things Network V3
 * Ethernet connection
 * Docker based packet forwarder
+* Gateway communication confirmed with TTN
 
 The UDP packet forwarder is currently the stable version of this project.
 
 ---
 
-# Future development
-
-The next development step is to move towards:
+# Future development may include:
 
 **Semtech Basic Station**
 
@@ -50,7 +49,7 @@ Basic Station is the newer gateway protocol and offers advantages such as:
 
 * Secure WebSocket connection
 * Better gateway management
-* CUPS support
+* CUPS & LNS support
 * Easier future integration with The Things Stack
 
 The goal is to add Basic Station support while keeping the current UDP installation available as a reliable fallback.
@@ -65,7 +64,7 @@ The goal is to add Basic Station support while keeping the current UDP installat
 * ✅ Nothing is written to the internal eMMC
 * ✅ Converts the G285 into a TTN LoRaWAN gateway
 * ✅ Uses Semtech UDP Packet Forwarder
-* ✅ Automatic Gateway EUI detection
+* ✅ Automatic Gateway EUI generation from Ethernet MAC address
 * ✅ Docker based gateway operation
 * ✅ Safe and reversible installation
 * 🟡 Basic Station support planned
@@ -97,6 +96,7 @@ The goal is to add Basic Station support while keeping the current UDP installat
 Currently tested:
 
 * 🇪🇺 EU868
+* You can choose another region. Not tested!
 
 Other regions can be configured by changing the packet forwarder configuration.
 
@@ -142,16 +142,15 @@ For the **Bobcat 300 G285**, complete:
 
 * ✅ G285 – SD Card Boot (No eMMC Flash Required)
 * ✅ First Boot
-* ✅ Helium Installation
 
 Do not continue until:
 
 * Armbian boots from the microSD card
 * SSH access works
 * The SX1302 concentrator is detected
-* The original Helium installation has completed successfully
+* You don't have to install anything else. Just Armbian
 
-The original firmware remains stored safely on the internal eMMC.
+The original firmware remains stored safely on the internal eMMC with the G285 model. Armbian goed onto the eMMC with models G29X.
 
 ---
 
@@ -187,7 +186,8 @@ The installer will:
 * Detect the correct network MAC address
 * Create the Gateway EUI
 * Configure TTN UDP settings
-* Remove the Helium miner container from the Docker setup
+* Stop and remove the Helium miner Docker container
+* Replace it with a TTN UDP packet forwarder container
 * Create a TTN-only packet forwarder
 * Start the LoRa gateway automatically
 
@@ -217,6 +217,13 @@ To return to the original Helium hotspot:
 2. Remove the microSD card
 3. Reboot
 
+# Known limitations
+
+* Currently tested with Ethernet only
+* WiFi configuration depends on the Armbian setup. I advicse only to use 1 connection. WiFi **OR** Ethernet
+* Only EU868 has been tested so far
+* Basic Station support is planned but not implemented yet
+  
 ---
 
 # Credits
